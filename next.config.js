@@ -5,6 +5,7 @@ const nextConfig = {
   },
   images: {
     domains: ['localhost', '192.168.10.5'],
+    unoptimized: true,
   },
 }
 
