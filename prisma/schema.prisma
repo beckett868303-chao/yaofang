@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Patient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  age       Int
+  gender    String   @default("男")
+  phone     String
+  allergies String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  visits    Visit[]
+
+  @@map("patients")
+}
+
+model Visit {
+  id            Int                 @id @default(autoincrement())
+  patientId     Int
+  visitDate     DateTime
+  symptoms      String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  prescriptions PrescriptionImage[]
+  patient       Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@map("visits")
+}
+
+model PrescriptionImage {
+  id        Int      @id @default(autoincrement())
+  visitId   Int
+  imagePath String
+  ocrResult String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@map("prescription_images")
+}
