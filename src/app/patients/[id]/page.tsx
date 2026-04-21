@@ -69,6 +69,10 @@ export default function PatientDetailPage() {
         }
         
         const patientData = await response.json()
+        // 按就诊日期降序排序，最新的记录在前面
+        patientData.visits.sort((a: Visit, b: Visit) => {
+          return new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime()
+        })
         setPatient(patientData)
         
         // 初始化编辑的基本信息
