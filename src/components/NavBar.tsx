@@ -12,14 +12,14 @@ export default function NavBar() {
 
   return (
     <header className="bg-primary text-white shadow-md">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3 hover:text-secondary transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <Link href="/" className="flex items-center space-x-2 hover:text-secondary transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
-            <h1 className="text-2xl font-bold">个人病历管理系统 2.4</h1>
+            <h1 className="text-lg md:text-xl font-bold">个人病历管理系统 2.4</h1>
           </Link>
           <div className="flex items-center space-x-4">
             {loading ? (
@@ -39,7 +39,7 @@ export default function NavBar() {
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-2 bg-white text-primary rounded hover:bg-gray-100 transition-colors font-medium"
+                className="px-3 py-1.5 bg-white text-primary rounded hover:bg-gray-100 transition-colors font-medium text-sm"
               >
                 登录/注册
               </Link>
