@@ -27,6 +27,7 @@ interface Prescription {
   id: number
   imagePath: string
   ocrResult: string | null
+  createdAt: string
 }
 
 export default function PatientDetailPage() {
@@ -52,6 +53,11 @@ export default function PatientDetailPage() {
   })
   const [editedSymptoms, setEditedSymptoms] = useState<string>('')
   const [editedOcrResults, setEditedOcrResults] = useState<{ [key: number]: string }>({})
+  
+  // 筛选和排序状态
+  const [filterDate, setFilterDate] = useState<string>('')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [showDateDropdown, setShowDateDropdown] = useState<boolean>(false)
 
   useEffect(() => {
     const fetchPatientDetail = async () => {
@@ -73,6 +79,16 @@ export default function PatientDetailPage() {
         patientData.visits.sort((a: Visit, b: Visit) => {
           return new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime()
         })
+        
+        // 对每个就诊记录的处方按创建时间降序排序，最新的处方在前面
+        patientData.visits.forEach((visit: Visit) => {
+          if (visit.prescriptions) {
+            visit.prescriptions.sort((a: Prescription, b: Prescription) => {
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            })
+          }
+        })
+        
         setPatient(patientData)
         
         // 初始化编辑的基本信息
@@ -188,6 +204,55 @@ export default function PatientDetailPage() {
       console.error('保存就诊记录失败:', error)
       alert('保存失败，请稍后重试')
     }
+  }
+
+  // 筛选和排序就诊记录
+  const getFilteredAndSortedVisits = () => {
+    if (!patient || !patient.visits) {
+      return []
+    }
+
+    // 筛选
+    let filteredVisits = [...patient.visits]
+    if (filterDate) {
+      filteredVisits = filteredVisits.filter(visit => {
+        const visitDate = new Date(visit.visitDate)
+        const filterDateObj = new Date(filterDate)
+        return visitDate.getFullYear() === filterDateObj.getFullYear() &&
+               visitDate.getMonth() === filterDateObj.getMonth() &&
+               visitDate.getDate() === filterDateObj.getDate()
+      })
+    }
+
+    // 排序 - 先按日期，再按ID
+    filteredVisits.sort((a, b) => {
+      const dateA = new Date(a.visitDate).getTime()
+      const dateB = new Date(b.visitDate).getTime()
+      
+      // 按日期排序
+      if (dateA !== dateB) {
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB
+      }
+      
+      // 日期相同按ID排序
+      return sortOrder === 'desc' ? b.id - a.id : a.id - b.id
+    })
+
+    return filteredVisits
+  }
+
+  // 获取有就诊记录的日期列表
+  const getVisitDates = () => {
+    if (!patient || !patient.visits) {
+      return []
+    }
+    
+    const dates = new Set<string>()
+    patient.visits.forEach(visit => {
+      const date = new Date(visit.visitDate)
+      dates.add(date.toISOString().split('T')[0])
+    })
+    return Array.from(dates)
   }
 
   if (loading) {
@@ -337,10 +402,78 @@ export default function PatientDetailPage() {
 
       {/* 就诊历史 */}
       <div className="tcm-card">
-        <h3 className="text-xl font-semibold mb-4">就诊历史</h3>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+          <h3 className="text-xl font-semibold mb-2 md:mb-0">就诊历史</h3>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                日期筛选
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary flex-grow"
+                />
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDateDropdown(!showDateDropdown)}
+                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
+                  >
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                  </button>
+                  {showDateDropdown && getVisitDates().length > 0 && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <div className="p-2">
+                        <p className="text-xs font-medium text-gray-500 mb-2">有记录的日期</p>
+                        <div className="max-h-48 overflow-y-auto">
+                          {getVisitDates().map((date) => (
+                            <button
+                              key={date}
+                              onClick={() => {
+                                setFilterDate(date)
+                                setShowDateDropdown(false)
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100 ${filterDate === date ? 'bg-primary text-white' : ''}`}
+                            >
+                              {date}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {filterDate && (
+                  <button
+                    onClick={() => setFilterDate('')}
+                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
+                  >
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                排序方式
+              </label>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
+              >
+                <Calendar className="w-4 h-4 mr-2 text-primary" />
+                {sortOrder === 'desc' ? '最新优先' : '最早优先'}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* 筛选和排序后的就诊记录 */}
         <div className="space-y-6">
-          {patient.visits && patient.visits.length > 0 ? (
-            patient.visits.map((visit) => (
+          {getFilteredAndSortedVisits().length > 0 ? (
+            getFilteredAndSortedVisits().map((visit) => (
               <div key={visit.id} className="border-l-4 border-primary pl-4 py-2">
                 <div className="flex justify-between items-center mb-2">
                   <div className="flex items-center">
@@ -415,13 +548,12 @@ export default function PatientDetailPage() {
                         <div className="flex-shrink-0">
                           {prescription.imagePath ? (
                             <img
-                              src={prescription.imagePath}
+                              src={`/api/images/${encodeURIComponent(prescription.imagePath.replace('/uploads/', ''))}?t=${Date.now()}`}
                               alt={`药方 ${index + 1}`}
                               className="w-32 h-40 object-cover rounded cursor-pointer hover:opacity-90 transition-opacity"
-                              onClick={() => handleImageClick(prescription.imagePath)}
+                              onClick={() => handleImageClick(`/api/images/${encodeURIComponent(prescription.imagePath.replace('/uploads/', ''))}`)}
                               onError={(e) => {
                                 console.error('图片加载失败:', prescription.imagePath)
-                                // 可以在这里添加默认图片
                               }}
                             />
                           ) : (
@@ -481,12 +613,11 @@ export default function PatientDetailPage() {
               <X className="w-6 h-6" />
             </button>
             <img
-              src={selectedImage}
+              src={`${selectedImage}?t=${Date.now()}`}
               alt="预览"
               className="max-w-full max-h-[90vh] object-contain"
               onError={(e) => {
                 console.error('预览图片加载失败:', selectedImage)
-                // 可以在这里添加默认图片
               }}
             />
           </div>

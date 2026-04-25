@@ -12,7 +12,11 @@ export async function GET(
       include: {
         visits: {
           include: {
-            prescriptions: true
+            prescriptions: {
+              orderBy: {
+                createdAt: 'desc'
+              }
+            }
           },
           orderBy: {
             visitDate: 'desc'

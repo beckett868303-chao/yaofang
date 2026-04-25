@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { ArrowLeft, Search, User, Phone, FileText, Calendar } from 'lucide-react'
+import { ArrowLeft, Search, User, Phone, FileText, Calendar, Image as ImageIcon, X } from 'lucide-react'
 
 interface SearchResult {
   id: number
@@ -13,6 +13,7 @@ interface SearchResult {
   visitDate?: string
   diagnosis?: string
   prescriptionId?: number
+  imagePath?: string
   relevance: number
 }
 
@@ -20,8 +21,17 @@ export default function SearchPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
-  const handleSearch = () => {
+  const handleImageClick = (imagePath: string) => {
+    setSelectedImage(imagePath)
+  }
+
+  const handleClosePreview = () => {
+    setSelectedImage(null)
+  }
+
+  const handleSearch = async () => {
     if (!searchTerm.trim()) {
       setResults([])
       return
@@ -29,56 +39,22 @@ export default function SearchPage() {
 
     setIsSearching(true)
 
-    // 模拟搜索过程
-    setTimeout(() => {
-      const mockResults: SearchResult[] = [
-        {
-          id: 1,
-          type: 'patient',
-          patientName: '张三',
-          phone: '13800138000',
-          allergies: '青霉素',
-          relevance: 0.95
-        },
-        {
-          id: 2,
-          type: 'visit',
-          patientName: '张三',
-          visitDate: '2026-04-20',
-          diagnosis: '风寒感冒',
-          relevance: 0.90
-        },
-        {
-          id: 3,
-          type: 'prescription',
-          patientName: '张三',
-          visitDate: '2026-04-20',
-          prescriptionId: 1,
-          relevance: 0.85
-        },
-        {
-          id: 4,
-          type: 'patient',
-          patientName: '李四',
-          phone: '13900139000',
-          allergies: undefined,
-          relevance: 0.70
-        },
-        {
-          id: 5,
-          type: 'visit',
-          patientName: '王五',
-          visitDate: '2026-04-18',
-          diagnosis: '脾胃不和',
-          relevance: 0.65
-        }
-      ]
-
-      // 过滤结果，只返回相关度大于0.5的
-      const filteredResults = mockResults.filter(result => result.relevance > 0.5)
-      setResults(filteredResults)
+    try {
+      const response = await fetch(`/api/search?term=${encodeURIComponent(searchTerm)}`)
+      
+      if (!response.ok) {
+        throw new Error('搜索失败')
+      }
+      
+      const data = await response.json()
+      setResults(data.results || [])
+    } catch (error) {
+      console.error('搜索出错:', error)
+      alert('搜索失败，请稍后重试')
+      setResults([])
+    } finally {
       setIsSearching(false)
-    }, 500)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -133,6 +109,16 @@ export default function SearchPage() {
             <p className="text-sm text-gray-600">
               药方ID: {result.prescriptionId}
             </p>
+            {result.imagePath && (
+              <div className="mt-2">
+                <img
+                  src={`/api/images/${encodeURIComponent((result.imagePath || '').replace('/uploads/', ''))}?t=${Date.now()}`}
+                  alt="药方"
+                  className="w-24 h-32 object-cover rounded cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => handleImageClick(`/api/images/${encodeURIComponent((result.imagePath || '').replace('/uploads/', ''))}`)}
+                />
+              </div>
+            )}
           </div>
         )
       default:
@@ -233,6 +219,28 @@ export default function SearchPage() {
           <div className="flex flex-col items-center justify-center py-12">
             <Search className="w-12 h-12 text-gray-300 mb-4" />
             <p className="text-gray-500">请输入搜索关键词</p>
+          </div>
+        </div>
+      )}
+
+      {/* 图片预览模态框 */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button 
+              onClick={handleClosePreview}
+              className="absolute top-4 right-4 bg-white rounded-full p-2 z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={`${selectedImage}?t=${Date.now()}`}
+              alt="预览"
+              className="max-w-full max-h-[90vh] object-contain"
+              onError={(e) => {
+                console.error('预览图片加载失败:', selectedImage)
+              }}
+            />
           </div>
         </div>
       )}

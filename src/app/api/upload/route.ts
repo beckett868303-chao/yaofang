@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
 
     // 生成唯一文件名
     const fileName = file.name || 'image'
-    const uniqueName = `${Date.now()}_${fileName.replace(/\s+/g, '_')}`
+    const extension = fileName.includes('.') ? fileName.split('.').pop() : 'jpg'
+    const baseName = fileName.includes('.') ? fileName.split('.').slice(0, -1).join('.') : fileName
+    const uniqueName = `${Date.now()}_${baseName.replace(/\s+/g, '_')}.${extension}`
     const uploadPath = path.join(process.cwd(), 'public', 'uploads', uniqueName)
     const imagePath = `/uploads/${uniqueName}`
 
