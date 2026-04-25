@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { createToken, setAuthCookie } from '@/lib/auth'
+import { createToken, setAuthCookie, verifyPassword } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
     }
 
-    if (user.password !== password) {
+    if (!verifyPassword(password, user.password)) {
       return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
     }
 

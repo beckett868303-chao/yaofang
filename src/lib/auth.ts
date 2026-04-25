@@ -1,7 +1,18 @@
 import { cookies } from 'next/headers'
+import { createHash } from 'crypto'
 
 const TOKEN_NAME = 'auth_token'
 const TOKEN_SECRET = process.env.AUTH_SECRET || 'tcm-secret-key-change-in-production'
+
+// 密码哈希函数
+export function hashPassword(password: string): string {
+  return createHash('sha256').update(password).digest('hex')
+}
+
+// 验证密码
+export function verifyPassword(plainPassword: string, hashedPassword: string): boolean {
+  return hashPassword(plainPassword) === hashedPassword
+}
 
 export async function createToken(userId: number): Promise<string> {
   const payload = {

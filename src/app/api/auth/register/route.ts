@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { createToken, setAuthCookie } from '@/lib/auth'
+import { createToken, setAuthCookie, hashPassword } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
-        password,
+        password: hashPassword(password),
         name: name || null
       }
     })

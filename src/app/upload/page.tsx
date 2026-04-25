@@ -300,6 +300,13 @@ export default function UploadPage() {
       return
     }
 
+    // 检查是否所有图片都已完成OCR识别
+    const hasUnprocessedImages = images.some(img => img.isOCRProcessing)
+    if (hasUnprocessedImages) {
+      alert('请等待所有图片OCR识别完成后再保存')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -373,7 +380,8 @@ export default function UploadPage() {
         })
 
         if (!createPatientResponse.ok) {
-          throw new Error('创建病人失败')
+          const errorData = await createPatientResponse.json()
+          throw new Error(`创建病人失败: ${errorData.error || '未知错误'}`)
         }
 
         const newPatient = await createPatientResponse.json()
@@ -383,7 +391,7 @@ export default function UploadPage() {
       // 3. 创建就诊记录
       const prescriptions = uploadedImages.map(img => ({
         imagePath: img.imagePath,
-        ocrResult: img.ocrResult
+        ocrResult: img.ocrResult || ''
       }))
 
       console.log('创建就诊记录，处方数据:', prescriptions)
@@ -396,7 +404,7 @@ export default function UploadPage() {
         body: JSON.stringify({
           patientId,
           visitDate,
-          symptoms: symptoms,
+          symptoms: symptoms || '',
           prescriptions
         })
       })

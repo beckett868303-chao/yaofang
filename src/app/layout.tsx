@@ -8,8 +8,8 @@ import NavBar from '@/components/NavBar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '个人病历系统 2.1',
-  description: '个人病历系统 2.1，支持多图上传、智能识别和深度检索',
+  title: '个人病历管理系统 2.4',
+  description: '个人病历管理系统 2.4，支持多图上传、智能识别和深度检索',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             
             <footer className="bg-primary text-white py-4">
               <div className="container mx-auto px-4 text-center">
-                <p>© 2026 个人病历系统 2.1 - 专业、高效、安全</p>
+                <p>© 2026 个人病历管理系统 2.4 - 专业、高效、安全</p>
               </div>
             </footer>
           </div>

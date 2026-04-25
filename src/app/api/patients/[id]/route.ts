@@ -7,10 +7,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getCurrentUserId()
+    let userId = await getCurrentUserId()
     
+    // 如果未登录，使用默认用户 ID 1
     if (!userId) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+      userId = 1
     }
     
     const { id } = await params
@@ -50,10 +51,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getCurrentUserId()
+    let userId = await getCurrentUserId()
     
+    // 如果未登录，使用默认用户 ID 1
     if (!userId) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+      userId = 1
     }
     
     const { id } = await params
@@ -93,10 +95,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getCurrentUserId()
+    let userId = await getCurrentUserId()
     
+    // 如果未登录，使用默认用户 ID 1
     if (!userId) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+      userId = 1
     }
     
     const { id } = await params
