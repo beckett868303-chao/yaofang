@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getCurrentUserId } from '@/lib/auth'
+import { getCurrentUserId, hashPassword } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -43,9 +43,23 @@ export async function POST(request: NextRequest) {
   try {
     let userId = await getCurrentUserId()
     
-    // 如果未登录，使用默认用户 ID 1
+    // 检查是否存在用户，如果不存在，创建一个默认用户
     if (!userId) {
-      userId = 1
+      // 尝试查找用户
+      const existingUser = await prisma.user.findFirst()
+      if (existingUser) {
+        userId = existingUser.id
+      } else {
+        // 创建默认用户
+        const newUser = await prisma.user.create({
+          data: {
+            email: 'default@example.com',
+            password: hashPassword('defaultpassword'),
+            name: '默认用户'
+          }
+        })
+        userId = newUser.id
+      }
     }
 
     const body = await request.json()

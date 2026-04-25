@@ -19,8 +19,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
     }
 
-    if (!verifyPassword(password, user.password)) {
-      return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
+    // 检查密码是否已经哈希，如果没有，直接比较
+    if (user.password.length !== 64) {
+      // 密码未哈希，直接比较
+      if (password !== user.password) {
+        return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
+      }
+    } else {
+      // 密码已哈希，使用验证函数
+      if (!verifyPassword(password, user.password)) {
+        return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 })
+      }
     }
 
     const token = await createToken(user.id)
