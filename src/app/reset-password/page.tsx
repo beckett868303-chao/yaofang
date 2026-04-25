@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">个人病历管理系统-Agent潮</h1>
+          <h1 className="text-3xl font-bold text-primary mb-2">个人病历系统 2.0</h1>
           <p className="text-gray-600">重置密码</p>
         </div>
 
