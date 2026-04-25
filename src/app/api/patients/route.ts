@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, age, gender, phone, allergies } = body
 
-    if (!name || !age || !phone) {
-      return NextResponse.json({ error: '姓名、年龄和手机号不能为空' }, { status: 400 })
+    if (!name || !age) {
+      return NextResponse.json({ error: '姓名和年龄不能为空' }, { status: 400 })
     }
 
     const patient = await prisma.patient.create({
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         name,
         age: parseInt(age),
         gender: gender || '男',
-        phone,
+        phone: phone || null,
         allergies: allergies || null,
         userId: userId
       }

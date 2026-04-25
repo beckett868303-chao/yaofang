@@ -19,7 +19,7 @@ export default function NavBar() {
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
-            <h1 className="text-2xl font-bold">个人病历系统 2.0</h1>
+            <h1 className="text-2xl font-bold">个人病历系统 2.1</h1>
           </Link>
           <div className="flex items-center space-x-4">
             {loading ? (
