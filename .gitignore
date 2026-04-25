@@ -38,5 +38,8 @@ lerna-debug.log*
 ehthumbs.db
 Thumbs.db
 
-# Uploads directory (optional - uncomment if you don't want to commit uploaded images)
-# public/uploads/
+# Uploads directory
+public/uploads/
+
+# Database files
+prisma/dev.db
