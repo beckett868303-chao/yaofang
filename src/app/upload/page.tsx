@@ -341,15 +341,18 @@ export default function UploadPage() {
       const patients = await patientResponse.json()
       
       // 优先按姓名和手机号组合匹配
-      let existingPatient = patients.find((p: any) => {
-        if (patientInfo.phone) {
-          // 有手机号时，按姓名和手机号组合匹配
-          return p.name === patientInfo.name && p.phone === patientInfo.phone
-        } else {
-          // 无手机号时，按姓名匹配
-          return p.name === patientInfo.name
-        }
-      })
+      let existingPatient = null
+      if (Array.isArray(patients)) {
+        existingPatient = patients.find((p: any) => {
+          if (patientInfo.phone) {
+            // 有手机号时，按姓名和手机号组合匹配
+            return p.name === patientInfo.name && p.phone === patientInfo.phone
+          } else {
+            // 无手机号时，按姓名匹配
+            return p.name === patientInfo.name
+          }
+        })
+      }
 
       if (existingPatient) {
         patientId = existingPatient.id.toString()
