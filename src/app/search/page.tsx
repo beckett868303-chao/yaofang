@@ -93,7 +93,7 @@ export default function SearchPage() {
         return (
           <div className="space-y-1">
             <p className="text-sm text-gray-600">
-              <Calendar className="w-4 h-4 inline mr-1" /> {result.visitDate}
+              <Calendar className="w-4 h-4 inline mr-1" /> {result.visitDate ? new Date(result.visitDate).toLocaleString('zh-CN') : ''}
             </p>
             <p className="text-sm text-gray-600">
               诊断: {result.diagnosis}
@@ -104,7 +104,7 @@ export default function SearchPage() {
         return (
           <div className="space-y-1">
             <p className="text-sm text-gray-600">
-              <Calendar className="w-4 h-4 inline mr-1" /> {result.visitDate}
+              <Calendar className="w-4 h-4 inline mr-1" /> {result.visitDate ? new Date(result.visitDate).toLocaleString('zh-CN') : ''}
             </p>
             <p className="text-sm text-gray-600">
               药方ID: {result.prescriptionId}

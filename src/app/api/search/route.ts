@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
+import { getCurrentUserId } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = await getCurrentUserId()
+    
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
+    
     const searchTerm = request.nextUrl.searchParams.get('term') || ''
     
     if (!searchTerm.trim()) {
@@ -14,6 +19,7 @@ export async function GET(request: NextRequest) {
     // 搜索病人
     const patients = await prisma.patient.findMany({
       where: {
+        userId: userId,
         OR: [
           { name: { contains: searchTerm } },
           { phone: { contains: searchTerm } },
@@ -32,6 +38,9 @@ export async function GET(request: NextRequest) {
     // 搜索就诊记录
     const visits = await prisma.visit.findMany({
       where: {
+        patient: {
+          userId: userId
+        },
         OR: [
           { symptoms: { contains: searchTerm } },
           { patient: { name: { contains: searchTerm } } },
@@ -47,6 +56,11 @@ export async function GET(request: NextRequest) {
     // 搜索药方
     const prescriptions = await prisma.prescriptionImage.findMany({
       where: {
+        visit: {
+          patient: {
+            userId: userId
+          }
+        },
         OR: [
           { ocrResult: { contains: searchTerm } },
           { visit: { patient: { name: { contains: searchTerm } } } },

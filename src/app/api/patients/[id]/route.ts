@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getCurrentUserId } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId()
+    
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
+    
     const { id } = await params
-    const patient = await prisma.patient.findUnique({
-      where: { id: parseInt(id) },
+    const patient = await prisma.patient.findFirst({
+      where: { 
+        id: parseInt(id),
+        userId: userId
+      },
       include: {
         visits: {
           include: {
@@ -40,9 +50,26 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId()
+    
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
+    
     const { id } = await params
     const body = await request.json()
     const { name, age, gender, phone, allergies } = body
+
+    const existingPatient = await prisma.patient.findFirst({
+      where: {
+        id: parseInt(id),
+        userId: userId
+      }
+    })
+
+    if (!existingPatient) {
+      return NextResponse.json({ error: '病人不存在' }, { status: 404 })
+    }
 
     const patient = await prisma.patient.update({
       where: { id: parseInt(id) },
@@ -66,7 +93,25 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId()
+    
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
+    
     const { id } = await params
+    
+    const existingPatient = await prisma.patient.findFirst({
+      where: {
+        id: parseInt(id),
+        userId: userId
+      }
+    })
+
+    if (!existingPatient) {
+      return NextResponse.json({ error: '病人不存在' }, { status: 404 })
+    }
+
     await prisma.patient.delete({
       where: { id: parseInt(id) }
     })

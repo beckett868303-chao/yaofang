@@ -20,7 +20,11 @@ interface UploadedImage {
 
 export default function UploadPage() {
   const router = useRouter()
-  const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
+  const [visitDate, setVisitDate] = useState(() => {
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    return now.toISOString().slice(0, 16)
+  })
   const [images, setImages] = useState<UploadedImage[]>([])
   const [patientInfo, setPatientInfo] = useState({
     name: '',
@@ -173,18 +177,38 @@ export default function UploadPage() {
   }
 
   // 从OCR结果中提取病人信息
-  const extractPatientInfo = (ocrResult: string) => {
+  const extractPatientInfo = async (ocrResult: string) => {
     // 这里可以根据实际的OCR结果格式来提取病人信息
     // 例如：姓名、年龄、性别等
     // 这里只是一个示例实现
     console.log('尝试提取病人信息...')
     
     // 示例：从OCR结果中提取姓名（支持多种格式）
-    const nameMatch = ocrResult.match(/姓名[:：]\s*([^\n]+)/)
+    const nameMatch = ocrResult.match(/姓名[:：]\s*([^\n,，]+)/)
     if (nameMatch && nameMatch[1]) {
       const name = nameMatch[1].trim()
       setPatientInfo(prev => ({ ...prev, name }))
       console.log('提取到姓名:', name)
+      
+      // 搜索历史病人
+      try {
+        const response = await fetch(`/api/patients/search?name=${encodeURIComponent(name)}`)
+        const patients = await response.json()
+        if (patients.length > 0) {
+          const matchedPatient = patients[0]
+          setPatientInfo(prev => ({
+            ...prev,
+            name: matchedPatient.name,
+            age: matchedPatient.age.toString(),
+            gender: matchedPatient.gender,
+            phone: matchedPatient.phone || '',
+            allergies: matchedPatient.allergies || ''
+          }))
+          console.log('自动匹配到历史病人:', matchedPatient.name)
+        }
+      } catch (error) {
+        console.error('搜索历史病人失败:', error)
+      }
     }
     
     // 示例：从OCR结果中提取年龄（支持多种格式）
@@ -312,10 +336,20 @@ export default function UploadPage() {
       // 2. 创建或更新病人信息
       let patientId: string
       
-      // 尝试通过手机号查找病人
+      // 尝试通过姓名和手机号的组合查找病人
       const patientResponse = await fetch('/api/patients')
       const patients = await patientResponse.json()
-      const existingPatient = patients.find((p: any) => p.phone === patientInfo.phone)
+      
+      // 优先按姓名和手机号组合匹配
+      let existingPatient = patients.find((p: any) => {
+        if (patientInfo.phone) {
+          // 有手机号时，按姓名和手机号组合匹配
+          return p.name === patientInfo.name && p.phone === patientInfo.phone
+        } else {
+          // 无手机号时，按姓名匹配
+          return p.name === patientInfo.name
+        }
+      })
 
       if (existingPatient) {
         patientId = existingPatient.id.toString()
@@ -538,14 +572,14 @@ export default function UploadPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              手机号 <span className="text-red-500">*</span>
+              手机号
             </label>
             <input
               type="tel"
               value={patientInfo.phone}
               onChange={(e) => setPatientInfo({ ...patientInfo, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="请输入病人手机号"
+              placeholder="请输入病人手机号（选填）"
             />
           </div>
           <div className="md:col-span-2">
@@ -569,10 +603,10 @@ export default function UploadPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              就诊日期 <span className="text-red-500">*</span>
+              就诊时间 <span className="text-red-500">*</span>
             </label>
             <input
-              type="date"
+              type="datetime-local"
               value={visitDate}
               onChange={(e) => setVisitDate(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
