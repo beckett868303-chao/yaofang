@@ -363,7 +363,13 @@ export default function UploadPage() {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(patientInfo)
+          body: JSON.stringify({
+            name: patientInfo.name,
+            age: Number(patientInfo.age),
+            gender: patientInfo.gender,
+            phone: patientInfo.phone || null,
+            allergies: patientInfo.allergies || null
+          })
         })
 
         if (!createPatientResponse.ok) {

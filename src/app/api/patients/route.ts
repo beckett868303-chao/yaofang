@@ -41,12 +41,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    // 允许未登录用户创建病人
-    // const userId = await getCurrentUserId()
-    // 
-    // if (!userId) {
-    //   return NextResponse.json({ error: '请先登录' }, { status: 401 })
-    // }
+    let userId = await getCurrentUserId()
+    
+    // 如果未登录，使用默认用户 ID 1
+    if (!userId) {
+      userId = 1
+    }
 
     const body = await request.json()
     const { name, age, gender, phone, allergies } = body
@@ -58,17 +58,18 @@ export async function POST(request: NextRequest) {
     const patient = await prisma.patient.create({
       data: {
         name,
-        age: parseInt(age),
+        age: Number(age),
         gender: gender || '男',
         phone: phone || null,
         allergies: allergies || null,
-        userId: 1 // 使用默认用户 ID
+        userId: userId
       }
     })
 
     return NextResponse.json(patient, { status: 201 })
-  } catch (error) {
-    console.error('创建病人失败:', error)
-    return NextResponse.json({ error: '创建病人失败' }, { status: 500 })
+  } catch (error: any) {
+    console.error('创建病人失败:', error);
+    console.error('错误信息:', error.message);
+    return NextResponse.json({ error: '创建病人失败', details: error.message }, { status: 500 })
   }
 }
