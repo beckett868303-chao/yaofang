@@ -295,7 +295,7 @@ export default function UploadPage() {
       return
     }
 
-    if (!patientInfo.name || !patientInfo.age || !patientInfo.phone) {
+    if (!patientInfo.name || !patientInfo.age) {
       alert('请填写病人基本信息')
       return
     }
