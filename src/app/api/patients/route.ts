@@ -4,15 +4,16 @@ import { getCurrentUserId } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
-    }
+    // 允许未登录用户获取病人列表
+    // const userId = await getCurrentUserId()
+    // 
+    // if (!userId) {
+    //   return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    // }
 
     const patients = await prisma.patient.findMany({
       where: {
-        userId: userId
+        userId: 1 // 使用默认用户 ID
       },
       include: {
         visits: {
@@ -40,11 +41,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getCurrentUserId()
-    
-    if (!userId) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 })
-    }
+    // 允许未登录用户创建病人
+    // const userId = await getCurrentUserId()
+    // 
+    // if (!userId) {
+    //   return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    // }
 
     const body = await request.json()
     const { name, age, gender, phone, allergies } = body
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
         gender: gender || '男',
         phone: phone || null,
         allergies: allergies || null,
-        userId: userId
+        userId: 1 // 使用默认用户 ID
       }
     })
 
