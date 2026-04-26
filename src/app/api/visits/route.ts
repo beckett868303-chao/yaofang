@@ -4,12 +4,11 @@ import { getCurrentUserId } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // 允许未登录用户创建就诊记录
-    // const userId = await getCurrentUserId()
-    // 
-    // if (!userId) {
-    //   return NextResponse.json({ error: '请先登录' }, { status: 401 })
-    // }
+    const userId = await getCurrentUserId()
+    
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 })
+    }
 
     const body = await request.json()
     const { patientId, visitDate, symptoms, prescriptions } = body
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
     const patient = await prisma.patient.findFirst({
       where: {
         id: parseInt(patientId),
-        userId: 1 // 使用默认用户 ID
+        userId: userId
       }
     })
 

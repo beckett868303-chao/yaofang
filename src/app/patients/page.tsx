@@ -275,7 +275,7 @@ export default function PatientsPage() {
                           <MoreVertical className="w-5 h-5" />
                         </button>
                         {showMenuId === patient.id && (
-                          <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                          <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10 whitespace-nowrap">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
