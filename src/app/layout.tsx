@@ -8,9 +8,9 @@ import NavBar from '@/components/NavBar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '个人病历管理系统 2.4',
-  description: '个人病历管理系统 2.4，支持多图上传、智能识别和深度检索',
-}
+  title: "个人病历系统",
+  description: "个人病历系统，支持多图上传、智能识别和深度检索",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -4,16 +4,16 @@ import { getCurrentUserId, hashPassword } from '@/lib/auth'
 
 export async function GET() {
   try {
-    // 允许未登录用户获取病人列表
-    // const userId = await getCurrentUserId()
-    // 
-    // if (!userId) {
-    //   return NextResponse.json({ error: '请先登录' }, { status: 401 })
-    // }
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      // 如果没有登录，返回空数组
+      return NextResponse.json([]);
+    }
 
     const patients = await prisma.patient.findMany({
       where: {
-        userId: 1 // 使用默认用户 ID
+        userId: userId
       },
       include: {
         visits: {
@@ -41,25 +41,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    let userId = await getCurrentUserId()
-    
-    // 检查是否存在用户，如果不存在，创建一个默认用户
+    const userId = await getCurrentUserId();
+
     if (!userId) {
-      // 尝试查找用户
-      const existingUser = await prisma.user.findFirst()
-      if (existingUser) {
-        userId = existingUser.id
-      } else {
-        // 创建默认用户
-        const newUser = await prisma.user.create({
-          data: {
-            email: 'default@example.com',
-            password: hashPassword('defaultpassword'),
-            name: '默认用户'
-          }
-        })
-        userId = newUser.id
-      }
+      return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
 
     const body = await request.json()
@@ -85,5 +70,46 @@ export async function POST(request: NextRequest) {
     console.error('创建病人失败:', error);
     console.error('错误信息:', error.message);
     return NextResponse.json({ error: '创建病人失败', details: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    }
+
+    const body = await request.json()
+    const { patientId } = body
+
+    if (!patientId) {
+      return NextResponse.json({ error: '请提供病人ID' }, { status: 400 })
+    }
+
+    // 先验证这个病人属于当前用户
+    const patient = await prisma.patient.findFirst({
+      where: {
+        id: Number(patientId),
+        userId: userId
+      }
+    })
+
+    if (!patient) {
+      return NextResponse.json({ error: '病人不存在或无权删除' }, { status: 404 })
+    }
+
+    // 删除病人及其相关数据
+    await prisma.patient.delete({
+      where: {
+        id: Number(patientId)
+      }
+    })
+
+    return NextResponse.json({ success: true, message: '删除成功' })
+  } catch (error: any) {
+    console.error('删除病人失败:', error);
+    return NextResponse.json({ error: '删除病人失败' }, { status: 500 })
   }
 }

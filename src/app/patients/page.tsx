@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Search, Calendar, Edit, Save, X } from 'lucide-react'
+import { Search, Calendar, Edit, Save, X, MoreVertical, Trash2 } from 'lucide-react'
 
 interface Patient {
   id: number
@@ -31,6 +31,8 @@ export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [editingField, setEditingField] = useState<EditField | null>(null)
+  const [showMenuId, setShowMenuId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const fetchPatients = async () => {
     try {
@@ -104,6 +106,33 @@ export default function PatientsPage() {
     setEditingField(null)
   }
 
+  const handleDeletePatient = async (patientId: number) => {
+    if (!confirm('确定要删除这个病人记录吗？')) return
+
+    try {
+      setDeletingId(patientId)
+      const response = await fetch('/api/patients', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ patientId })
+      })
+
+      if (response.ok) {
+        setPatients(prevPatients => prevPatients.filter(p => p.id !== patientId))
+        setShowMenuId(null)
+      } else {
+        alert('删除失败，请稍后重试')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      alert('删除失败，请稍后重试')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* 页面标题 */}
@@ -139,12 +168,11 @@ export default function PatientsPage() {
               : null
             
             return (
-              <Link 
-                key={patient.id} 
-                href={`/patients/${patient.id}`}
-                className="block"
-              >
-                <div className="tcm-card hover:shadow-lg transition-shadow p-4">
+              <div key={patient.id} className="relative">
+                <div 
+                  className="tcm-card hover:shadow-lg transition-shadow p-4 cursor-pointer"
+                  onClick={() => window.location.href = `/patients/${patient.id}`}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex-grow">
                       <div className="flex items-center space-x-3 mb-2">
@@ -179,7 +207,7 @@ export default function PatientsPage() {
                             <span 
                               className="ml-2 text-primary cursor-pointer hover:underline"
                               onClick={(e) => {
-                                e.preventDefault();
+                                e.stopPropagation();
                                 handleEditField(patient.id, 'phone', patient.phone);
                               }}
                             >
@@ -215,7 +243,7 @@ export default function PatientsPage() {
                               <span 
                                 className="ml-2 text-primary cursor-pointer hover:underline"
                                 onClick={(e) => {
-                                  e.preventDefault();
+                                  e.stopPropagation();
                                   handleEditField(patient.id, 'allergies', patient.allergies || '');
                                 }}
                               >
@@ -232,12 +260,40 @@ export default function PatientsPage() {
                         )}
                       </div>
                     </div>
-                    <div className="text-right text-sm text-gray-500">
-                      <p>{new Date(patient.createdAt).toLocaleDateString('zh-CN')}</p>
+                    <div className="flex items-center">
+                      <div className="text-right text-sm text-gray-500 mr-4">
+                        <p>{new Date(patient.createdAt).toLocaleDateString('zh-CN')}</p>
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenuId(showMenuId === patient.id ? null : patient.id);
+                          }}
+                          className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </button>
+                        {showMenuId === patient.id && (
+                          <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePatient(patient.id);
+                              }}
+                              disabled={deletingId === patient.id}
+                              className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>{deletingId === patient.id ? '删除中...' : '删除'}</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             )
           })
         )}

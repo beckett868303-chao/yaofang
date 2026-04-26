@@ -645,7 +645,20 @@ export default function UploadPage() {
       </div>
 
       {/* 保存按钮 */}
-      <div className="flex justify-center">
+      <div className="flex justify-center space-x-4">
+        {images.length > 0 && (
+          <button
+            onClick={() => {
+              if (confirm('确定要清空所有图片吗？')) {
+                setImages([])
+              }
+            }}
+            className="flex items-center px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+          >
+            <Trash2 className="w-5 h-5 mr-2" />
+            清空所有
+          </button>
+        )}
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
