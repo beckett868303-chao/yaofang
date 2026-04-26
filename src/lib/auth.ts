@@ -58,9 +58,12 @@ export async function getCurrentUserId(): Promise<number | null> {
 
 export async function setAuthCookie(token: string) {
   const cookieStore = await cookies()
+  const isProduction = process.env.NODE_ENV === 'production'
+  const isHttps = process.env.FORCE_HTTPS === 'true' || (isProduction && !process.env.ALLOW_HTTP)
+  
   cookieStore.set(TOKEN_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60,
     path: '/'
