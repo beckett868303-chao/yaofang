@@ -42,4 +42,4 @@ Thumbs.db
 public/uploads/
 
 # Database files
-prisma/dev.db.trae/
+prisma/dev.db
